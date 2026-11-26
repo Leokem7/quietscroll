@@ -8,7 +8,7 @@
 
   function render(enabled) {
     toggle.checked = enabled;
-    statusText.textContent = enabled ? "Active on x.com" : "Paused";
+    statusText.textContent = enabled ? "Active" : "Paused";
   }
 
   if (!api?.storage?.local) return;

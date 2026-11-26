@@ -64,7 +64,7 @@
   function isGifVideo(video) {
     const src = video.currentSrc || video.src || "";
     if (src.includes("/tweet_video/")) return true;
-    // Real X videos (including short clips with loop=true) stream via MSE blob: URLs.
+    // Timeline videos (including short clips with loop=true) stream via MSE blob: URLs.
     if (src.startsWith("blob:")) return false;
 
     const player = getPlayerContainer(video);
@@ -95,7 +95,7 @@
   function findActiveMuteButtonInPlayer(player) {
     if (!(player instanceof Element)) return null;
 
-    // Primary: new X player exposes data-icon="icon-sound-high" (language-agnostic).
+    // Primary: current player exposes data-icon="icon-sound-high" (language-agnostic).
     const icons = player.querySelectorAll(SOUND_ICON_SELECTOR);
     for (const svg of icons) {
       if (isSoundOnIcon(svg)) {
@@ -104,7 +104,7 @@
       }
     }
 
-    // Fallback: legacy X player exposes data-testid="mute" only while unmuted.
+    // Fallback: legacy player exposes data-testid="mute" only while unmuted.
     if (isGlobalSessionUnmuted()) {
       return player.querySelector('button[data-testid="mute"]');
     }
@@ -183,8 +183,8 @@
   }
 
   /**
-   * Synchronizes X's internal React audio store back to muted by clicking its
-   * real mute button inside a video player. Only clicks when confirmed unmuted
+   * Synchronizes the player's internal React audio store back to muted by clicking
+   * its mute button inside a video container. Only clicks when confirmed unmuted
    * so it never accidentally unmutes a muted video.
    */
   function syncReactMute(preferredContainer, attempt = 0) {
@@ -196,7 +196,7 @@
       syncRetryTimer = 0;
       isSyncingMute = true;
       try {
-        debugLog("Clicking X mute button to sync React state", btn);
+        debugLog("Clicking mute button to sync React state", btn);
         btn.click();
       } finally {
         isSyncingMute = false;
@@ -226,7 +226,7 @@
 
   /**
    * Layer 1: Watch the currently authorized video and re-mute it as soon as it
-   * scrolls out of view or unmounts, resetting X's global React state early.
+   * scrolls out of view or unmounts, resetting the global React state early.
    */
   const observer =
     typeof IntersectionObserver !== "undefined"
@@ -314,7 +314,7 @@
   }
 
   /**
-   * Track real (trusted) user interactions inside video players and X's global "M" shortcut.
+   * Track real (trusted) user interactions inside video players and the "M" shortcut.
    * Capture phase ensures authorization is recorded before React's handlers run.
    */
   function handleTrustedInteraction(event) {

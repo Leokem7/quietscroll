@@ -1,103 +1,70 @@
-# QuietScroll for X
+# QuietScroll
 
-A tiny, zero-dependency Firefox extension that automatically re-mutes videos on **X (Twitter)** when you scroll past them — so the next auto-playing video in your timeline always starts muted.
+Browser extension for Firefox and Chromium browsers that automatically re-mutes timeline videos as you scroll past them, so the next auto-playing video always starts muted.
 
 <details>
-<summary><strong>🇧🇷 Leia em Português (PT-BR)</strong></summary>
+<summary>🇧🇷 Português (PT-BR)</summary>
 
-### Por que usar?
-O novo player de vídeo do X mantém o áudio ligado durante toda a sessão: se você desmutar um único vídeo na timeline e continuar rolando a página, todos os próximos vídeos começam a tocar com som automaticamente.
+Quando você desmuta um vídeo no feed e continua rolando a página, o player web mantém o som ligado na sessão inteira — todos os próximos vídeos começam a tocar com áudio automaticamente.
 
-O **QuietScroll for X** resolve isso de forma invisível e ultraleve:
-- Clique no vídeo (ou aperte a tecla `M`) para ouvir normalmente enquanto ele estiver visível.
-- Assim que você rolar a timeline e o vídeo sair da tela, o áudio volta para **mutado** antes do próximo vídeo iniciar.
-- Sincroniza com o estado interno do React do X (sem dessincronização de precisar clicar duas vezes para desmutar).
-- Bloqueia "estouros" curtos de áudio mesmo em rolagens muito rápidas.
-- Ignora GIFs, preserva o áudio em tela cheia / Picture-in-Picture (PiP) e respeita trocas de aba.
-- **Extremamente leve e privado:** Vanilla JS puro (~12 KB no total), 0 dependências, 0 timers de polling em segundo plano e **zero coleta de dados**.
-
-#### Testando localmente no Firefox
-1. Abra `about:debugging#/runtime/this-firefox` no Firefox.
-2. Clique em **Carregar extensão temporária…** (*Load Temporary Add-on…*).
-3. Selecione o arquivo `manifest.json` dentro desta pasta.
-4. Acesse [x.com](https://x.com), desmute um vídeo e role até o próximo.
-
-#### Empacotando para publicar no Firefox Add-ons (AMO)
-Use o `tar` nativo (Windows 10/11, macOS ou Linux) para gerar um `.zip` compatível com barras `/` no padrão exigido pela Mozilla:
-
-```powershell
-tar -a -c -f quietscroll-for-x.zip manifest.json icons src
-```
+O **QuietScroll** volta o áudio para o mudo assim que o vídeo sai da tela:
+- Desmute normalmente pelo botão de som ou pela tecla `M`.
+- Ao rolar além do vídeo, o áudio volta para mutado antes do próximo vídeo iniciar.
+- Sincroniza o estado interno do player (sem precisar clicar duas vezes para desmutar depois).
+- Ignora GIFs e mantém o som em tela cheia, Picture-in-Picture (PiP), modais e abas em segundo plano.
+- Compatível com **Firefox** (Desktop e Android) e navegadores baseados em **Chromium** (Chrome, Edge, Brave, Vivaldi).
+- Sem dependências externas e sem coleta de dados.
 
 </details>
 
----
+## Why
 
-## Why?
+When you unmute a single video in your feed and keep scrolling, the web player persists that unmuted state for the rest of your session — every video that auto-plays afterward starts with sound on.
 
-X's web video player persists your unmuted state across the entire session: once you unmute a single video on your timeline and keep scrolling, every subsequent auto-playing video blasts audio automatically.
+QuietScroll keeps audio scoped to the video you actually chose to unmute:
+- Click unmute or press `M` to watch with sound while the video is on screen.
+- Scroll past it, and audio resets to muted before the next video starts playing.
+- Syncs with the player's internal state so you don't have to click twice to unmute the next video.
+- Ignores looping GIFs and leaves audio untouched in Fullscreen, Picture-in-Picture (PiP), modals, and background tabs.
+- Includes a toolbar toggle to pause or resume the extension at any time.
 
-**QuietScroll for X** restores per-video sanity:
-- **Unmute naturally:** Click any video's unmute control or press `M` to watch with sound.
-- **Auto-mute on scroll:** As soon as the video leaves the viewport, audio resets to muted before the next video starts.
-- **Zero UI desync:** Synchronizes directly with X's internal player state so you never have to double-click to unmute the next video.
-- **Anti-blip protection:** Synchronous `HTMLMediaElement` guards prevent brief audio bursts even during fast timeline virtualization.
-- **Smart edge-case handling:** Ignores silent GIFs, keeps audio playing in Fullscreen, Picture-in-Picture (PiP), lightbox modals, and background tabs, and includes a one-click toolbar toggle to pause/resume.
-- **Ultra-lightweight:** Pure Vanilla JS (~12 KB total), 0 dependencies, 0 DOM-wide `MutationObserver` loops, 0 background polling.
+## Install
+
+- **Firefox (Desktop 140+ & Android 142+):** Coming soon on Firefox Add-ons (AMO).
+- **Chrome / Edge / Brave (111+):** Clone or download this repository, open `chrome://extensions`, enable **Developer mode**, click **Load unpacked**, and select the project folder.
 
 ## How It Works
 
-QuietScroll uses a lightweight two-layer architecture running at `document_start`:
+Two small scripts run at `document_start`:
 
-1. **Viewport Observer (`IntersectionObserver`):** Observes *only* the single video you explicitly unmuted. When its visibility drops below 15% (or X's virtualized list unmounts it), QuietScroll mutes it and resets X's player state.
-2. **Synchronous Media Guard (`HTMLMediaElement.prototype`):** Intercepts `.muted` and `.play()` (plus native `autoplay` events) so unauthorized videos are muted synchronously before the first audio frame is decoded.
-
-## Local Development & Testing
-
-1. Open `about:debugging#/runtime/this-firefox` in Firefox (140+ on Desktop, 142+ on Android).
-2. Click **Load Temporary Add-on…**.
-3. Select [`manifest.json`](manifest.json) from this repository.
-4. Open [x.com](https://x.com), unmute a timeline video, and scroll down to the next video.
-
-> **Debug tip:** Run `window.__quietScrollDebug = true` in the Firefox DevTools Console on `x.com` to inspect state transitions.
-
-## Packaging for Firefox Add-ons (AMO)
-
-Create the submission archive from the project root using standard forward-slash paths (supported natively on Windows 10/11, macOS, and Linux via `tar`, or with `web-ext`):
-
-```bash
-tar -a -c -f quietscroll-for-x.zip manifest.json icons src
-```
-
-*(Avoid Windows PowerShell 5.1's `Compress-Archive`, which writes `\` path separators that Mozilla's validator rejects.)*
-
-Then upload `quietscroll-for-x.zip` on the [Firefox Add-on Developer Hub](https://addons.mozilla.org/developers/).
+1. `IntersectionObserver` watches only the video you explicitly unmuted. When its visibility drops below 15% (or the virtualized feed unmounts it), the video is muted and the player's UI state is reset.
+2. A synchronous guard on `HTMLMediaElement.prototype` (`muted` and `play()`) blocks brief audio blips on fast scrolls before the next video decodes audio.
 
 ## Privacy & Permissions
 
-- **Zero data collection:** Makes **0 network requests**, contains **0 analytics/telemetry**, and declares `data_collection_permissions.required: ["none"]`.
-- **Minimal permissions:**
-  - `storage`: Stores a single local boolean (`enabled`) for the toolbar toggle switch.
-  - Content scripts restricted strictly to `https://x.com/*` and `https://twitter.com/*`.
+QuietScroll makes no network requests and collects no telemetry or user data (`data_collection_permissions.required: ["none"]`).
 
-## Project Structure
+- `storage`: stores a single local `enabled` boolean for the toolbar toggle.
+- Host access is restricted strictly to the target feed domains declared in [`manifest.json`](manifest.json).
 
-```text
-├── icons/
-│   └── icon.svg             # Extension & toolbar vector icon
-├── src/
-│   ├── content-bridge.js    # ISOLATED world bridge for browser.storage state
-│   ├── content-main.js      # MAIN world media guard & IntersectionObserver
-│   └── popup/               # Toolbar toggle popup (HTML/CSS/JS)
-├── manifest.json            # Manifest V3 configuration (Firefox Desktop & Android)
-├── LICENSE                  # MIT License
-└── README.md
+## Development
+
+- **Firefox:** Open `about:debugging#/runtime/this-firefox` → **Load Temporary Add-on…** → select [`manifest.json`](manifest.json).
+- **Chrome / Edge / Brave:** Open `chrome://extensions` → enable **Developer mode** → **Load unpacked** → select the repository root.
+- **Debug logs:** Run `window.__quietScrollDebug = true` in the page DevTools Console.
+
+To package a `.zip` archive with forward-slash paths:
+
+```bash
+tar -a -c -f quietscroll.zip manifest.json icons src LICENSE
 ```
-
-## Disclaimer
-
-Independent open-source project. Not affiliated with, authorized, or endorsed by X Corp.
 
 ## License
 
-Released under the [MIT License](LICENSE).
+[MIT](LICENSE)
+
+## Disclaimer
+
+Independent open-source project. Not affiliated with, authorized, or endorsed by X Corp. (formerly Twitter).
+
+Built with the assistance of AI (**Google Gemini**).
